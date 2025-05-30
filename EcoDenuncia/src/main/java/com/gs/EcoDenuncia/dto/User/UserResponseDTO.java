@@ -1,4 +1,4 @@
-package com.gs.EcoDenuncia.dto;
+package com.gs.EcoDenuncia.dto.User;
 
 import com.gs.EcoDenuncia.model.User;
 import lombok.Data;

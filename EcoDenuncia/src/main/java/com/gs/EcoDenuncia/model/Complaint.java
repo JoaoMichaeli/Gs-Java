@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(of = "id")
-public class Complaints {
+public class Complaint {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "denuncia_seq")

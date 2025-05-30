@@ -1,4 +1,4 @@
-package com.gs.EcoDenuncia.dto;
+package com.gs.EcoDenuncia.dto.User;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

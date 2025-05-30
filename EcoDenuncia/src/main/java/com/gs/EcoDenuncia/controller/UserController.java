@@ -1,7 +1,7 @@
 package com.gs.EcoDenuncia.controller;
 
-import com.gs.EcoDenuncia.dto.UserRequestDTO;
-import com.gs.EcoDenuncia.dto.UserResponseDTO;
+import com.gs.EcoDenuncia.dto.User.UserRequestDTO;
+import com.gs.EcoDenuncia.dto.User.UserResponseDTO;
 import com.gs.EcoDenuncia.model.User;
 import com.gs.EcoDenuncia.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
