@@ -12,7 +12,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,8 +35,6 @@ public class LocationController {
                 .numero(dto.getNumero())
                 .complemento(dto.getComplemento())
                 .cep(dto.getCep())
-                .latitude(dto.getLatitude())
-                .longitude(dto.getLongitude())
                 .bairro(bairro)
                 .build();
 
@@ -80,8 +77,6 @@ public class LocationController {
         localizacao.setNumero(dto.getNumero());
         localizacao.setComplemento(dto.getComplemento());
         localizacao.setCep(dto.getCep());
-        localizacao.setLatitude(dto.getLatitude());
-        localizacao.setLongitude(dto.getLongitude());
         localizacao.setBairro(bairro);
 
         repository.save(localizacao);
@@ -108,8 +103,6 @@ public class LocationController {
                 .numero(l.getNumero())
                 .complemento(l.getComplemento())
                 .cep(l.getCep())
-                .latitude(l.getLatitude())
-                .longitude(l.getLongitude())
                 .bairro(l.getBairro().getNome())
                 .cidade(l.getBairro().getCidade().getNome())
                 .estado(l.getBairro().getCidade().getEstado().getNome())

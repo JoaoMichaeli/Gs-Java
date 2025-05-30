@@ -15,8 +15,6 @@ public class LocationResponseDTO {
     private String numero;
     private String complemento;
     private String cep;
-    private Double latitude;
-    private Double longitude;
     private String bairro;
     private String cidade;
     private String estado;

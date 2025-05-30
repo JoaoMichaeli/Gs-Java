@@ -32,10 +32,6 @@ public class Location {
     @Pattern(regexp = "\\d{8}", message = "CEP deve conter 8 dígitos")
     private String cep;
 
-    private Double latitude;
-
-    private Double longitude;
-
     @ManyToOne
     @JoinColumn(name = "id_bairro", nullable = false)
     private Neighborhood bairro;

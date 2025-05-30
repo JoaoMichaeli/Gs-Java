@@ -24,11 +24,5 @@ public class LocationRequestDTO {
     private String cep;
 
     @NotNull
-    private Double latitude;
-
-    @NotNull
-    private Double longitude;
-
-    @NotNull
     private Long idBairro;
 }
