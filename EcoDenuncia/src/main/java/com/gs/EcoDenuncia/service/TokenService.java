@@ -19,6 +19,7 @@ public class TokenService {
         var jwt = JWT.create()
                 .withSubject(user.getId().toString())
                 .withClaim("email", user.getEmail())
+                .withClaim("role", user.getRole())
                 .withExpiresAt(expiresAt)
                 .sign(algorithm);
 
@@ -29,8 +30,9 @@ public class TokenService {
         var verifiedToken = JWT.require(algorithm).build().verify(token);
 
         return User.builder()
-                .id(Long.valueOf( verifiedToken.getSubject() ))
-                .email(verifiedToken.getClaim("email").toString())
+                .id(Long.valueOf(verifiedToken.getSubject()))
+                .email(verifiedToken.getClaim("email").asString())
+                .role(verifiedToken.getClaim("role").asString())
                 .build();
     }
 }

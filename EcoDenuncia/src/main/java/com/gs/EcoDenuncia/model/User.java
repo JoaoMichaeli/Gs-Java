@@ -34,13 +34,16 @@ public class User implements UserDetails{
     @Column(unique = true)
     private String email;
 
-    @Size(min = 5)
+    @Size(min = 5, message = "A senha deve ter no mínimo 5 caracteres")
     @NotBlank(message = "campo obrigatório")
     private String senha;
 
+    @NotBlank(message = "Campo obrigatório")
+    private String role;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("USER"));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + this.role));
     }
 
     @Override
@@ -50,6 +53,12 @@ public class User implements UserDetails{
 
     @Override
     public String getUsername() {
-        return nome;
+        return email;
     }
+
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
+
 }

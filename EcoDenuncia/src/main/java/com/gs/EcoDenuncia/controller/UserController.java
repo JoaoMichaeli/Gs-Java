@@ -1,5 +1,7 @@
 package com.gs.EcoDenuncia.controller;
 
+import com.gs.EcoDenuncia.dto.UserRequestDTO;
+import com.gs.EcoDenuncia.dto.UserResponseDTO;
 import com.gs.EcoDenuncia.model.User;
 import com.gs.EcoDenuncia.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,83 +13,116 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("users")
+@RequestMapping("/users")
 @Slf4j
 public class UserController {
 
     @Autowired
     private UserRepository repository;
 
+    @Autowired
+    private PasswordEncoder encoder;
+
+    //Cadastro público
     @PostMapping
-    @Operation(summary = "Cadastrar usuário", description = "Cadastra um novo usuário")
+    @Operation(summary = "Cadastrar usuário", description = "Cadastra um novo usuário com role USER ou ADMIN")
     @CacheEvict(value = "users", allEntries = true)
-    @ResponseStatus(code = HttpStatus.CREATED)
-    public ResponseEntity<User> createUser(@RequestBody @Valid User user, @AuthenticationPrincipal User authenticatedUser){
-        log.info("Usuário {} está criando um novo usuário {}", authenticatedUser.getUsername(), user.getUsername());
+    public ResponseEntity<UserResponseDTO> createUser(@RequestBody @Valid UserRequestDTO userDTO) {
+        User user = new User();
+        user.setNome(userDTO.getNome());
+        user.setEmail(userDTO.getEmail());
+        user.setSenha(encoder.encode(userDTO.getSenha()));
+        user.setRole(userDTO.getRole().toUpperCase());
+
         User savedUser = repository.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new UserResponseDTO(savedUser));
     }
 
+    //Apenas ADMIN
     @GetMapping
-    @Operation(summary = "Listar usuários cadastrados", description = "Retorna um array com todos os usuários cadastrados")
+    @Operation(summary = "Listar usuários cadastrados", description = "Retorna um array com todos os usuários cadastrados (Apenas ADMIN)")
     @Cacheable("users")
-    public ResponseEntity<List<User>> listAllUsers(){
-        List<User> users = repository.findAll();
-        return ResponseEntity.ok(users);
-    }
-
-    @GetMapping("{id}")
-    @Operation(summary = "Buscar usuário por Id", description = "Retorna um usuário com base no id")
-    public ResponseEntity<User> getUserById(@PathVariable Long id, @AuthenticationPrincipal User authenticatedUser){
-        Optional<User> optionalUser = repository.findById(id);
-        if (optionalUser.isPresent()) {
-            log.info("Usuário {} consultou o usuário {}", authenticatedUser.getUsername(), id);
-            return ResponseEntity.ok(optionalUser.get());
+    public ResponseEntity<List<UserResponseDTO>> listAllUsers(@AuthenticationPrincipal User userAuth) {
+        if (!userAuth.getRole().equalsIgnoreCase("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.notFound().build();
+        List<User> users = repository.findAll();
+        List<UserResponseDTO> dtos = users.stream().map(UserResponseDTO::new).collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
-    @PutMapping("{id}")
-    @Operation(summary = "Atualizar usuário", description = "Atualiza os dados de um usuário existente")
+    //Consultar próprio perfil ou ADMIN
+    @GetMapping("/{id}")
+    @Operation(summary = "Buscar usuário por Id", description = "Retorna um usuário com base no id (ADMIN ou dono do perfil)")
+    public ResponseEntity<?> getUserById(@PathVariable Long id, @AuthenticationPrincipal User userAuth) {
+        if (!userAuth.getId().equals(id) && !userAuth.getRole().equalsIgnoreCase("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado.");
+        }
+
+        Optional<User> optionalUser = repository.findById(id);
+        return optionalUser
+                .map(user -> ResponseEntity.ok(new UserResponseDTO(user)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    //Atualizar próprio perfil ou ADMIN
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar usuário", description = """
+        Atualiza os dados de um usuário existente. 
+        ⚠️ Apenas usuários com role ADMIN podem alterar o campo 'role'.
+        Usuários comuns (USER) podem atualizar apenas nome, email e senha.
+        """
+    )
     @CacheEvict(value = "users", allEntries = true)
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody @Valid User userDetails, @AuthenticationPrincipal User authenticatedUser) {
+    public ResponseEntity<?> updateUser(
+            @PathVariable Long id,
+            @RequestBody @Valid UserRequestDTO userDTO,
+            @AuthenticationPrincipal User userAuth
+    ) {
+        if (!userAuth.getId().equals(id) && !userAuth.getRole().equalsIgnoreCase("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado.");
+        }
+
         Optional<User> optionalUser = repository.findById(id);
 
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-            user.setNome(userDetails.getUsername());
-            user.setEmail(userDetails.getEmail());
-            user.setSenha(userDetails.getPassword());
+            user.setNome(userDTO.getNome());
+            user.setEmail(userDTO.getEmail());
+            user.setSenha(encoder.encode(userDTO.getSenha()));
+
+            if (userAuth.getRole().equalsIgnoreCase("ADMIN")) {
+                user.setRole(userDTO.getRole().toUpperCase());
+            }
 
             User updatedUser = repository.save(user);
-            log.info("Usuário {} atualizou o usuário {}", authenticatedUser.getUsername(), id);
-            return ResponseEntity.ok(updatedUser);
+            return ResponseEntity.ok(new UserResponseDTO(updatedUser));
         }
 
         return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("{id}")
-    @Operation(summary = "Deletar usuário", description = "Remove um usuário do sistema")
+    //Deletar próprio perfil ou ADMIN
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Deletar usuário", description = "Remove um usuário do sistema (ADMIN ou dono do perfil)")
     @CacheEvict(value = "users", allEntries = true)
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id, @AuthenticationPrincipal User authenticatedUser) {
+    public ResponseEntity<?> deleteUser(@PathVariable Long id, @AuthenticationPrincipal User userAuth) {
+        if (!userAuth.getId().equals(id) && !userAuth.getRole().equalsIgnoreCase("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado.");
+        }
+
         if (repository.existsById(id)) {
             repository.deleteById(id);
-            log.info("Usuário {} deletou o usuário {}", authenticatedUser.getUsername(), id);
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
-    }
-
-    @GetMapping("/me")
-    @Operation(summary = "Consultar usuário autenticado", description = "Retorna os dados do usuário autenticado")
-    public ResponseEntity<User> getAuthenticatedUser(@AuthenticationPrincipal User authenticatedUser) {
-        return ResponseEntity.ok(authenticatedUser);
     }
 }
