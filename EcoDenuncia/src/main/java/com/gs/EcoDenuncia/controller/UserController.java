@@ -77,7 +77,7 @@ public class UserController {
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar usuário", description = """
         Atualiza os dados de um usuário existente. 
-        ⚠️ Apenas usuários com role ADMIN podem alterar o campo 'role'.
+        Apenas usuários com role ADMIN podem alterar o campo 'role'.
         Usuários comuns (USER) podem atualizar apenas nome, email e senha.
         """
     )
