@@ -11,7 +11,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,8 +26,7 @@ public class StateController {
     @CacheEvict(value = "estados", allEntries = true)
     public ResponseEntity<StateResponseDTO> criar(@RequestBody @Valid StateRequestDTO dto) {
         var estado = State.builder()
-                .nome(dto.getNome())
-                .uf(dto.getUf())
+                .type(dto.getType())
                 .build();
 
         repository.save(estado);
@@ -60,8 +58,7 @@ public class StateController {
         var estado = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Estado não encontrado"));
 
-        estado.setNome(dto.getNome());
-        estado.setUf(dto.getUf());
+        estado.setType(dto.getType());
 
         repository.save(estado);
 
@@ -82,8 +79,7 @@ public class StateController {
     private StateResponseDTO toResponseDTO(State estado) {
         return StateResponseDTO.builder()
                 .id(estado.getId())
-                .nome(estado.getNome())
-                .uf(estado.getUf())
+                .type(estado.getType())
                 .build();
     }
 }

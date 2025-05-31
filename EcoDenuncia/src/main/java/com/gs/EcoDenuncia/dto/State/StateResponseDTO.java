@@ -1,5 +1,6 @@
 package com.gs.EcoDenuncia.dto.State;
 
+import com.gs.EcoDenuncia.model.StateType;
 import lombok.*;
 
 @Data
@@ -9,5 +10,5 @@ import lombok.*;
 public class StateResponseDTO {
     private Long id;
     private String nome;
-    private String uf;
+    private StateType type;
 }

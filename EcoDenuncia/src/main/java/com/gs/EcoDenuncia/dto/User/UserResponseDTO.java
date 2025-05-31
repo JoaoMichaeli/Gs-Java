@@ -1,5 +1,6 @@
 package com.gs.EcoDenuncia.dto.User;
 
+import com.gs.EcoDenuncia.model.RoleType;
 import com.gs.EcoDenuncia.model.User;
 import lombok.Data;
 
@@ -8,7 +9,7 @@ public class UserResponseDTO {
     private Long id;
     private String nome;
     private String email;
-    private String role;
+    private RoleType role;
 
     public UserResponseDTO(User user) {
         this.id = user.getId();

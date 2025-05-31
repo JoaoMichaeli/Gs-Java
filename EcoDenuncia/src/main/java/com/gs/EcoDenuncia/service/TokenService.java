@@ -2,6 +2,7 @@ package com.gs.EcoDenuncia.service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.gs.EcoDenuncia.model.RoleType;
 import com.gs.EcoDenuncia.model.Token;
 import com.gs.EcoDenuncia.model.User;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ public class TokenService {
         var jwt = JWT.create()
                 .withSubject(user.getId().toString())
                 .withClaim("email", user.getEmail())
-                .withClaim("role", user.getRole())
+                .withClaim("role", user.getRole().name())
                 .withExpiresAt(expiresAt)
                 .sign(algorithm);
 
@@ -32,7 +33,7 @@ public class TokenService {
         return User.builder()
                 .id(Long.valueOf(verifiedToken.getSubject()))
                 .email(verifiedToken.getClaim("email").asString())
-                .role(verifiedToken.getClaim("role").asString())
+                .role(RoleType.valueOf(verifiedToken.getClaim("role").asString())) // converte para RoleType
                 .build();
     }
 }

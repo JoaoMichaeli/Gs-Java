@@ -2,6 +2,7 @@ package com.gs.EcoDenuncia.controller;
 
 import com.gs.EcoDenuncia.dto.User.UserRequestDTO;
 import com.gs.EcoDenuncia.dto.User.UserResponseDTO;
+import com.gs.EcoDenuncia.model.RoleType;
 import com.gs.EcoDenuncia.model.User;
 import com.gs.EcoDenuncia.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,7 +31,7 @@ public class UserController {
     @Autowired
     private PasswordEncoder encoder;
 
-    //Cadastro público
+    // ✅ Cadastro público
     @PostMapping
     @Operation(summary = "Cadastrar usuário", description = "Cadastra um novo usuário com role USER ou ADMIN")
     @CacheEvict(value = "users", allEntries = true)
@@ -40,30 +40,40 @@ public class UserController {
         user.setNome(userDTO.getNome());
         user.setEmail(userDTO.getEmail());
         user.setSenha(encoder.encode(userDTO.getSenha()));
-        user.setRole(userDTO.getRole().toUpperCase());
+
+        // ✅ Converter String para Enum com tratamento
+        try {
+            user.setRole(userDTO.getRole());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(null);
+        }
 
         User savedUser = repository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(new UserResponseDTO(savedUser));
     }
 
-    //Apenas ADMIN
+    // ✅ Apenas ADMIN pode listar todos
     @GetMapping
-    @Operation(summary = "Listar usuários cadastrados", description = "Retorna um array com todos os usuários cadastrados (Apenas ADMIN)")
+    @Operation(summary = "Listar usuários cadastrados", description = "Retorna todos os usuários cadastrados (Apenas ADMIN)")
     @Cacheable("users")
-    public ResponseEntity<List<UserResponseDTO>> listAllUsers(@AuthenticationPrincipal User userAuth) {
-        if (!userAuth.getRole().equalsIgnoreCase("ADMIN")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    public ResponseEntity<?> listAllUsers(@AuthenticationPrincipal User userAuth) {
+        if (!userAuth.getRole().equals(RoleType.ADMIN)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado.");
         }
-        List<User> users = repository.findAll();
-        List<UserResponseDTO> dtos = users.stream().map(UserResponseDTO::new).collect(Collectors.toList());
+        List<UserResponseDTO> dtos = repository.findAll()
+                .stream()
+                .map(UserResponseDTO::new)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
-    //Consultar próprio perfil ou ADMIN
+    // ✅ Consultar próprio perfil ou ADMIN
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar usuário por Id", description = "Retorna um usuário com base no id (ADMIN ou dono do perfil)")
+    @Operation(summary = "Buscar usuário por Id", description = "Retorna um usuário pelo id (ADMIN ou dono do perfil)")
     public ResponseEntity<?> getUserById(@PathVariable Long id, @AuthenticationPrincipal User userAuth) {
-        if (!userAuth.getId().equals(id) && !userAuth.getRole().equalsIgnoreCase("ADMIN")) {
+        if (!userAuth.getId().equals(id) && !userAuth.getRole().equals(RoleType.ADMIN)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado.");
         }
 
@@ -73,7 +83,7 @@ public class UserController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    //Atualizar próprio perfil ou ADMIN
+    // ✅ Atualizar próprio perfil ou ADMIN
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar usuário", description = """
         Atualiza os dados de um usuário existente. 
@@ -87,7 +97,7 @@ public class UserController {
             @RequestBody @Valid UserRequestDTO userDTO,
             @AuthenticationPrincipal User userAuth
     ) {
-        if (!userAuth.getId().equals(id) && !userAuth.getRole().equalsIgnoreCase("ADMIN")) {
+        if (!userAuth.getId().equals(id) && !userAuth.getRole().equals(RoleType.ADMIN)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado.");
         }
 
@@ -99,8 +109,14 @@ public class UserController {
             user.setEmail(userDTO.getEmail());
             user.setSenha(encoder.encode(userDTO.getSenha()));
 
-            if (userAuth.getRole().equalsIgnoreCase("ADMIN")) {
-                user.setRole(userDTO.getRole().toUpperCase());
+            if (userAuth.getRole().equals(RoleType.ADMIN)) {
+                try {
+                    user.setRole(userDTO.getRole());
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body("Role inválido. Use ADMIN ou USER.");
+                }
             }
 
             User updatedUser = repository.save(user);
@@ -110,12 +126,12 @@ public class UserController {
         return ResponseEntity.notFound().build();
     }
 
-    //Deletar próprio perfil ou ADMIN
+    // ✅ Deletar próprio perfil ou ADMIN
     @DeleteMapping("/{id}")
     @Operation(summary = "Deletar usuário", description = "Remove um usuário do sistema (ADMIN ou dono do perfil)")
     @CacheEvict(value = "users", allEntries = true)
     public ResponseEntity<?> deleteUser(@PathVariable Long id, @AuthenticationPrincipal User userAuth) {
-        if (!userAuth.getId().equals(id) && !userAuth.getRole().equalsIgnoreCase("ADMIN")) {
+        if (!userAuth.getId().equals(id) && !userAuth.getRole().equals(RoleType.ADMIN)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado.");
         }
 
