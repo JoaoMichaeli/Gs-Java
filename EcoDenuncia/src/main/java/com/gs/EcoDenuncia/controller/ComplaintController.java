@@ -9,17 +9,24 @@ import com.gs.EcoDenuncia.repository.ComplaintRepository;
 import com.gs.EcoDenuncia.repository.LocationRepository;
 import com.gs.EcoDenuncia.repository.PublicOrganizationRepository;
 import com.gs.EcoDenuncia.repository.UserRepository;
+import com.gs.EcoDenuncia.specification.ComplaintSpecification;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.awt.print.Pageable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -41,6 +48,8 @@ public class ComplaintController {
 
     @Autowired
     private PublicOrganizationRepository publicOrganizationRepository;
+
+    public record ComplaintFilters(String descricao, String orgaoNome, String localizacaoCidade) {}
 
     @PostMapping
     @Operation(summary = "Criar denúncia", description = "Cadastra uma nova denúncia no sistema")
@@ -88,19 +97,26 @@ public class ComplaintController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar denúncias", description = "Retorna todas as denúncias (somente ADMIN)")
+    @Operation(summary = "Listar denúncias", description = "Retorna uma lista paginada de denúncias (somente ADMIN)")
     @Cacheable("complaints")
-    public ResponseEntity<?> listAllComplaints(@AuthenticationPrincipal User userAuth) {
+    public ResponseEntity<Page<ComplaintResponseDTO>> index(
+            @AuthenticationPrincipal User userAuth,
+            @RequestParam(required = false) String descricao,
+            @RequestParam(required = false) String orgaoNome,
+            @RequestParam(required = false) String localizacaoCidade,
+            @ParameterObject @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
         if (!userAuth.getRole().equals(RoleType.ADMIN)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado: Somente administradores podem listar todas as denúncias");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        List<ComplaintResponseDTO> dtos = complaintRepository.findAll()
-                .stream()
-                .map(this::toResponseDTO)
-                .collect(Collectors.toList());
+        var filters = new ComplaintFilters(descricao, orgaoNome, localizacaoCidade);
+        var specification = ComplaintSpecification.withFilters(filters);
 
-        return ResponseEntity.ok(dtos);
+        Page<Complaint> complaintsPage = complaintRepository.findAll(specification, (org.springframework.data.domain.Pageable) pageable);
+        Page<ComplaintResponseDTO> dtoPage = complaintsPage.map(this::toResponseDTO);
+
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/user/{userId}")

@@ -6,13 +6,19 @@ import com.gs.EcoDenuncia.model.RoleType;
 import com.gs.EcoDenuncia.model.State;
 import com.gs.EcoDenuncia.model.User;
 import com.gs.EcoDenuncia.repository.StateRepository;
+import com.gs.EcoDenuncia.specification.StateSpecification;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,9 +35,11 @@ public class StateController {
     @Autowired
     private StateRepository repository;
 
+    public record StateFilters(String nome, String uf) {}
+
     @PostMapping
     @Operation(summary = "Criar estado", description = "Cadastra um novo estado no sistema (Apenas ADMIN)")
-    @CacheEvict(value = "estados", allEntries = true)
+    @CacheEvict(value = "state", allEntries = true)
     public ResponseEntity<?> criar(
             @RequestBody @Valid StateRequestDTO dto,
             @AuthenticationPrincipal User userAuth) {
@@ -51,14 +59,21 @@ public class StateController {
 
     @GetMapping
     @Operation(summary = "Listar estados", description = "Retorna uma lista com todos os estados cadastrados")
-    @Cacheable("estados")
-    public ResponseEntity<List<StateResponseDTO>> listar() {
-        var estados = repository.findAll();
-        var dtos = estados.stream()
-                .map(this::toResponseDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+    @Cacheable("state")
+    public ResponseEntity<Page<StateResponseDTO>> listar(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String uf,
+            @ParameterObject @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        var filters = new StateFilters(nome, uf);
+        var specification = StateSpecification.withFilters(filters);
+
+        Page<State> page = repository.findAll(specification, pageable);
+        Page<StateResponseDTO> dtoPage = page.map(this::toResponseDTO);
+
+        return ResponseEntity.ok(dtoPage);
     }
+
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar estado por ID", description = "Retorna os dados de um estado específico pelo ID")
@@ -70,7 +85,7 @@ public class StateController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar estado", description = "Atualiza os dados de um estado existente (Apenas ADMIN)")
-    @CacheEvict(value = "estados", allEntries = true)
+    @CacheEvict(value = "state", allEntries = true)
     public ResponseEntity<?> atualizar(
             @PathVariable Long id,
             @RequestBody @Valid StateRequestDTO dto,
@@ -92,7 +107,7 @@ public class StateController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Deletar estado", description = "Remove um estado do sistema (Apenas ADMIN)")
-    @CacheEvict(value = "estados", allEntries = true)
+    @CacheEvict(value = "state", allEntries = true)
     public ResponseEntity<?> deletar(
             @PathVariable Long id,
             @AuthenticationPrincipal User userAuth) {

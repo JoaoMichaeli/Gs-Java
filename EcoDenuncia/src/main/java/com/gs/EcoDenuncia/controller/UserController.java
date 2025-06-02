@@ -5,12 +5,17 @@ import com.gs.EcoDenuncia.dto.User.UserResponseDTO;
 import com.gs.EcoDenuncia.model.RoleType;
 import com.gs.EcoDenuncia.model.User;
 import com.gs.EcoDenuncia.repository.UserRepository;
+import com.gs.EcoDenuncia.specification.UserSpecification;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,6 +35,8 @@ public class UserController {
 
     @Autowired
     private PasswordEncoder encoder;
+
+    public record UserFilters(String nome, String email) {}
 
     @PostMapping
     @Operation(summary = "Cadastrar usuário", description = "Cadastra um novo usuário com role USER ou ADMIN")
@@ -55,15 +62,25 @@ public class UserController {
     @GetMapping
     @Operation(summary = "Listar usuários cadastrados", description = "Retorna todos os usuários cadastrados (Apenas ADMIN)")
     @Cacheable("users")
-    public ResponseEntity<?> listAllUsers(@AuthenticationPrincipal User userAuth) {
+    public ResponseEntity<?> listarUsuarios(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String email,
+            @ParameterObject @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal User userAuth
+    ) {
         if (!userAuth.getRole().equals(RoleType.ADMIN)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado.");
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body("Acesso negado: Somente administradores podem visualizar os usuários.");
         }
-        List<UserResponseDTO> dtos = repository.findAll()
-                .stream()
-                .map(UserResponseDTO::new)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+
+        var filters = new UserFilters(nome, email);
+        var specification = UserSpecification.withFilters(filters);
+
+        var usuarios = repository.findAll(specification, pageable);
+        var usuariosDTO = usuarios.map(UserResponseDTO::new);
+
+        return ResponseEntity.ok(usuariosDTO);
     }
 
     @GetMapping("/{id}")

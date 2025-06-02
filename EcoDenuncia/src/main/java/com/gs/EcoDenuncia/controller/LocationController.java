@@ -7,13 +7,19 @@ import com.gs.EcoDenuncia.model.RoleType;
 import com.gs.EcoDenuncia.model.User;
 import com.gs.EcoDenuncia.repository.LocationRepository;
 import com.gs.EcoDenuncia.repository.NeighborhoodRepository;
+import com.gs.EcoDenuncia.specification.LocationSpecification;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,9 +40,12 @@ public class LocationController {
     @Autowired
     private NeighborhoodRepository neighborhoodRepository;
 
+    public record LocationFilters(String logradouro, String cep, String bairro) {}
+
+
     @PostMapping
     @Operation(summary = "Criar localização", description = "Cadastra uma nova localização no sistema (Apenas ADMIN)")
-    @CacheEvict(value = "localizacoes", allEntries = true)
+    @CacheEvict(value = "location", allEntries = true)
     public ResponseEntity<?> criar(
             @RequestBody @Valid LocationRequestDTO dto,
             @AuthenticationPrincipal User userAuth) {
@@ -63,13 +72,17 @@ public class LocationController {
 
     @GetMapping
     @Operation(summary = "Listar localizações", description = "Retorna uma lista com todas as localizações cadastradas")
-    @Cacheable("localizacoes")
-    public ResponseEntity<List<LocationResponseDTO>> listar() {
-        var lista = repository.findAll().stream()
-                .map(this::toResponseDTO)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(lista);
+    @Cacheable("location")
+    public Page<LocationResponseDTO> listar(
+            @RequestParam(required = false) String logradouro,
+            @RequestParam(required = false) String cep,
+            @RequestParam(required = false) String bairro,
+            @ParameterObject @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        var filters = new LocationFilters(logradouro, cep, bairro);
+        var specification = LocationSpecification.withFilters(filters);
+        return repository.findAll(specification, pageable)
+                .map(this::toResponseDTO);
     }
 
     @GetMapping("/{id}")
@@ -83,7 +96,7 @@ public class LocationController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar localização", description = "Atualiza os dados de uma localização existente (Apenas ADMIN)")
-    @CacheEvict(value = "localizacoes", allEntries = true)
+    @CacheEvict(value = "location", allEntries = true)
     public ResponseEntity<?> atualizar(
             @PathVariable Long id,
             @RequestBody @Valid LocationRequestDTO dto,
@@ -112,7 +125,7 @@ public class LocationController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Deletar localização", description = "Remove uma localização do sistema (Apenas ADMIN)")
-    @CacheEvict(value = "localizacoes", allEntries = true)
+    @CacheEvict(value = "location", allEntries = true)
     public ResponseEntity<?> deletar(
             @PathVariable Long id,
             @AuthenticationPrincipal User userAuth) {

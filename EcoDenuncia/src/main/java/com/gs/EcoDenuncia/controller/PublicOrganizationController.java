@@ -6,13 +6,19 @@ import com.gs.EcoDenuncia.model.PublicOrganization;
 import com.gs.EcoDenuncia.model.RoleType;
 import com.gs.EcoDenuncia.model.User;
 import com.gs.EcoDenuncia.repository.PublicOrganizationRepository;
+import com.gs.EcoDenuncia.specification.PublicOrganizationSpecification;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,9 +35,11 @@ public class PublicOrganizationController {
     @Autowired
     private PublicOrganizationRepository repository;
 
+    public record PublicOrganizationFilters(String nome, String areaAtuacao) {}
+
     @PostMapping
     @Operation(summary = "Criar órgão público", description = "Cadastra um novo órgão público (Apenas ADMIN), Areas 'Urbana', 'Ambiental', 'Saude'")
-    @CacheEvict(value = "orgaosPublicos", allEntries = true)
+    @CacheEvict(value = "organizations", allEntries = true)
     public ResponseEntity<?> criar(
             @RequestBody @Valid PublicOrganizationRequestDTO dto,
             @AuthenticationPrincipal User userAuth) {
@@ -53,14 +61,16 @@ public class PublicOrganizationController {
 
     @GetMapping
     @Operation(summary = "Listar órgãos públicos", description = "Retorna todos os órgãos públicos cadastrados")
-    @Cacheable("orgaosPublicos")
-    public ResponseEntity<List<PublicOrganizationResponseDTO>> listar() {
-        List<PublicOrganizationResponseDTO> orgaos = repository.findAll()
-                .stream()
-                .map(PublicOrganizationResponseDTO::new)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(orgaos);
+    @Cacheable("organizations")
+    public Page<PublicOrganizationResponseDTO> listar(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String areaAtuacao,
+            @ParameterObject @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        var filters = new PublicOrganizationFilters(nome, areaAtuacao);
+        var specification = PublicOrganizationSpecification.withFilters(filters);
+        return repository.findAll(specification, pageable)
+                .map(PublicOrganizationResponseDTO::new);
     }
 
     @GetMapping("/{id}")
@@ -73,7 +83,7 @@ public class PublicOrganizationController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar órgão", description = "Atualiza os dados de um órgão público (Apenas ADMIN)")
-    @CacheEvict(value = "orgaosPublicos", allEntries = true)
+    @CacheEvict(value = "organizations", allEntries = true)
     public ResponseEntity<?> atualizar(
             @PathVariable Long id,
             @RequestBody @Valid PublicOrganizationRequestDTO dto,
@@ -96,7 +106,7 @@ public class PublicOrganizationController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Deletar órgão", description = "Remove um órgão público do sistema (Apenas ADMIN)")
-    @CacheEvict(value = "orgaosPublicos", allEntries = true)
+    @CacheEvict(value = "organizations", allEntries = true)
     public ResponseEntity<?> deletar(
             @PathVariable Long id,
             @AuthenticationPrincipal User userAuth) {

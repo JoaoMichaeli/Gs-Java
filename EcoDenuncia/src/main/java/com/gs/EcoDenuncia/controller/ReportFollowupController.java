@@ -8,13 +8,18 @@ import com.gs.EcoDenuncia.model.RoleType;
 import com.gs.EcoDenuncia.model.User;
 import com.gs.EcoDenuncia.repository.ComplaintRepository;
 import com.gs.EcoDenuncia.repository.ReportFollowupRepository;
+import com.gs.EcoDenuncia.specification.ReportFollowUpSpecification;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,6 +40,8 @@ public class ReportFollowupController {
 
     @Autowired
     private ComplaintRepository complaintRepository;
+
+    public record ReportFollowupFilters(String status) {}
 
     @GetMapping("/denuncia/{denunciaId}")
     @Operation(summary = "Listar acompanhamentos por denúncia",
@@ -89,7 +96,7 @@ public class ReportFollowupController {
     @PostMapping
     @Operation(summary = "Criar acompanhamento",
             description = "Cria um novo acompanhamento de denúncia (Apenas ADMIN), Status ('Aberto', 'Em Andamento', 'Concluido')")
-    @CacheEvict(value = "acompanhamentos", allEntries = true)
+    @CacheEvict(value = "followup", allEntries = true)
     public ResponseEntity<?> createAcompanhamento(
             @RequestBody @Valid ReportFollowupRequestDTO dto,
             @AuthenticationPrincipal User userAuth) {
@@ -116,24 +123,29 @@ public class ReportFollowupController {
     @GetMapping
     @Operation(summary = "Listar todos os acompanhamentos",
             description = "Lista todos os acompanhamentos do sistema (Apenas ADMIN)")
-    @Cacheable("acompanhamentos")
-    public ResponseEntity<?> listAll(@AuthenticationPrincipal User userAuth) {
+    @Cacheable("followup")
+    public ResponseEntity<?> listAll(
+            @AuthenticationPrincipal User userAuth,
+            @RequestParam(required = false) String status,
+            @ParameterObject @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
         if (!userAuth.getRole().equals(RoleType.ADMIN)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado: Somente administradores podem listar todos os acompanhamentos");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Acesso negado: Somente administradores podem listar todos os acompanhamentos");
         }
 
-        List<ReportFollowupResponseDTO> dtos = repository.findAll()
-                .stream()
-                .map(ReportFollowupResponseDTO::new)
-                .collect(Collectors.toList());
+        var filters = new ReportFollowupFilters(status);
+        var specification = ReportFollowUpSpecification.withFilters(filters);
+        var page = repository.findAll(specification, pageable)
+                .map(ReportFollowupResponseDTO::new);
 
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(page);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar acompanhamento",
             description = "Atualiza os dados de um acompanhamento existente (Apenas ADMIN)")
-    @CacheEvict(value = "acompanhamentos", allEntries = true)
+    @CacheEvict(value = "followup", allEntries = true)
     public ResponseEntity<?> update(
             @PathVariable Long id,
             @RequestBody @Valid ReportFollowupRequestDTO dto,
@@ -166,7 +178,7 @@ public class ReportFollowupController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Deletar acompanhamento",
             description = "Remove um acompanhamento do sistema (Apenas ADMIN)")
-    @CacheEvict(value = "acompanhamentos", allEntries = true)
+    @CacheEvict(value = "followup", allEntries = true)
     public ResponseEntity<?> delete(
             @PathVariable Long id,
             @AuthenticationPrincipal User userAuth) {
