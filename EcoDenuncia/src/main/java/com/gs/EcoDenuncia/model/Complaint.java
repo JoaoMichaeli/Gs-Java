@@ -40,6 +40,6 @@ public class Complaint {
     @JoinColumn(name = "id_orgao", nullable = false)
     private PublicOrganization orgao;
 
-    @OneToMany(mappedBy = "id_denuncia", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "denuncia", cascade = CascadeType.ALL)
     private List<ReportFollowup> acompanhamentos;
 }
