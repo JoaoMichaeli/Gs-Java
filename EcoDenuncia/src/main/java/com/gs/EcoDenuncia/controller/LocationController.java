@@ -3,6 +3,8 @@ package com.gs.EcoDenuncia.controller;
 import com.gs.EcoDenuncia.dto.Location.LocationRequestDTO;
 import com.gs.EcoDenuncia.dto.Location.LocationResponseDTO;
 import com.gs.EcoDenuncia.model.Location;
+import com.gs.EcoDenuncia.model.RoleType;
+import com.gs.EcoDenuncia.model.User;
 import com.gs.EcoDenuncia.repository.LocationRepository;
 import com.gs.EcoDenuncia.repository.NeighborhoodRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,13 +12,15 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/localizacoes")
+@RequestMapping("/location")
 @RequiredArgsConstructor
 public class LocationController {
 
@@ -24,9 +28,16 @@ public class LocationController {
     private final NeighborhoodRepository neighborhoodRepository;
 
     @PostMapping
-    @Operation(summary = "Criar localização", description = "Cadastra uma nova localização no sistema")
+    @Operation(summary = "Criar localização", description = "Cadastra uma nova localização no sistema (Apenas ADMIN)")
     @CacheEvict(value = "localizacoes", allEntries = true)
-    public ResponseEntity<LocationResponseDTO> criar(@RequestBody @Valid LocationRequestDTO dto) {
+    public ResponseEntity<?> criar(
+            @RequestBody @Valid LocationRequestDTO dto,
+            @AuthenticationPrincipal User userAuth) {
+
+        if (!userAuth.getRole().equals(RoleType.ADMIN)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado: Somente administradores podem criar localizações");
+        }
+
         var bairro = neighborhoodRepository.findById(dto.getIdBairro())
                 .orElseThrow(() -> new RuntimeException("Bairro não encontrado"));
 
@@ -56,7 +67,7 @@ public class LocationController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar localização por ID", description = "Retorna os dados de uma localização específica pelo ID")
-    public ResponseEntity<LocationResponseDTO> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
         var localizacao = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Localização não encontrada"));
 
@@ -64,9 +75,17 @@ public class LocationController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar localização", description = "Atualiza os dados de uma localização existente")
+    @Operation(summary = "Atualizar localização", description = "Atualiza os dados de uma localização existente (Apenas ADMIN)")
     @CacheEvict(value = "localizacoes", allEntries = true)
-    public ResponseEntity<LocationResponseDTO> atualizar(@PathVariable Long id, @RequestBody @Valid LocationRequestDTO dto) {
+    public ResponseEntity<?> atualizar(
+            @PathVariable Long id,
+            @RequestBody @Valid LocationRequestDTO dto,
+            @AuthenticationPrincipal User userAuth) {
+
+        if (!userAuth.getRole().equals(RoleType.ADMIN)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado: Somente administradores podem atualizar localizações");
+        }
+
         var localizacao = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Localização não encontrada"));
 
@@ -85,9 +104,16 @@ public class LocationController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deletar localização", description = "Remove uma localização do sistema")
+    @Operation(summary = "Deletar localização", description = "Remove uma localização do sistema (Apenas ADMIN)")
     @CacheEvict(value = "localizacoes", allEntries = true)
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    public ResponseEntity<?> deletar(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User userAuth) {
+
+        if (!userAuth.getRole().equals(RoleType.ADMIN)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado: Somente administradores podem remover localizações");
+        }
+
         var localizacao = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Localização não encontrada"));
 

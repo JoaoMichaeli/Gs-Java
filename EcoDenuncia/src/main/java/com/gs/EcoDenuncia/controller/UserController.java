@@ -31,7 +31,6 @@ public class UserController {
     @Autowired
     private PasswordEncoder encoder;
 
-    // ✅ Cadastro público
     @PostMapping
     @Operation(summary = "Cadastrar usuário", description = "Cadastra um novo usuário com role USER ou ADMIN")
     @CacheEvict(value = "users", allEntries = true)
@@ -41,7 +40,6 @@ public class UserController {
         user.setEmail(userDTO.getEmail());
         user.setSenha(encoder.encode(userDTO.getSenha()));
 
-        // ✅ Converter String para Enum com tratamento
         try {
             user.setRole(userDTO.getRole());
         } catch (IllegalArgumentException e) {
@@ -54,7 +52,6 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new UserResponseDTO(savedUser));
     }
 
-    // ✅ Apenas ADMIN pode listar todos
     @GetMapping
     @Operation(summary = "Listar usuários cadastrados", description = "Retorna todos os usuários cadastrados (Apenas ADMIN)")
     @Cacheable("users")
@@ -69,7 +66,6 @@ public class UserController {
         return ResponseEntity.ok(dtos);
     }
 
-    // ✅ Consultar próprio perfil ou ADMIN
     @GetMapping("/{id}")
     @Operation(summary = "Buscar usuário por Id", description = "Retorna um usuário pelo id (ADMIN ou dono do perfil)")
     public ResponseEntity<?> getUserById(@PathVariable Long id, @AuthenticationPrincipal User userAuth) {
@@ -83,7 +79,6 @@ public class UserController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // ✅ Atualizar próprio perfil ou ADMIN
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar usuário", description = """
         Atualiza os dados de um usuário existente. 
@@ -126,7 +121,6 @@ public class UserController {
         return ResponseEntity.notFound().build();
     }
 
-    // ✅ Deletar próprio perfil ou ADMIN
     @DeleteMapping("/{id}")
     @Operation(summary = "Deletar usuário", description = "Remove um usuário do sistema (ADMIN ou dono do perfil)")
     @CacheEvict(value = "users", allEntries = true)

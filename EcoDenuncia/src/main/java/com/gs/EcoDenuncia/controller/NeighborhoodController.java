@@ -3,6 +3,8 @@ package com.gs.EcoDenuncia.controller;
 import com.gs.EcoDenuncia.dto.Neighborhood.NeighborhoodRequestDTO;
 import com.gs.EcoDenuncia.dto.Neighborhood.NeighborhoodResponseDTO;
 import com.gs.EcoDenuncia.model.Neighborhood;
+import com.gs.EcoDenuncia.model.RoleType;
+import com.gs.EcoDenuncia.model.User;
 import com.gs.EcoDenuncia.repository.CityRepository;
 import com.gs.EcoDenuncia.repository.NeighborhoodRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,13 +12,15 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/bairros")
+@RequestMapping("/neighborhood")
 @RequiredArgsConstructor
 public class NeighborhoodController {
 
@@ -24,9 +28,16 @@ public class NeighborhoodController {
     private final CityRepository cityRepository;
 
     @PostMapping
-    @Operation(summary = "Criar bairro", description = "Cadastra um novo bairro no sistema")
+    @Operation(summary = "Criar bairro", description = "Cadastra um novo bairro no sistema (Apenas ADMIN)")
     @CacheEvict(value = "bairros", allEntries = true)
-    public ResponseEntity<NeighborhoodResponseDTO> criar(@RequestBody @Valid NeighborhoodRequestDTO dto) {
+    public ResponseEntity<?> criar(
+            @RequestBody @Valid NeighborhoodRequestDTO dto,
+            @AuthenticationPrincipal User userAuth) {
+
+        if (!userAuth.getRole().equals(RoleType.ADMIN)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado: Somente administradores podem criar bairros");
+        }
+
         var cidade = cityRepository.findById(dto.getIdCidade())
                 .orElseThrow(() -> new RuntimeException("Cidade não encontrada"));
 
@@ -35,9 +46,8 @@ public class NeighborhoodController {
                 .cidade(cidade)
                 .build();
 
-        repository.save(bairro);
-
-        return ResponseEntity.ok(toResponseDTO(bairro));
+        Neighborhood savedBairro = repository.save(bairro);
+        return ResponseEntity.ok(toResponseDTO(savedBairro));
     }
 
     @GetMapping
@@ -53,7 +63,7 @@ public class NeighborhoodController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar bairro por ID", description = "Retorna os dados de um bairro específico")
-    public ResponseEntity<NeighborhoodResponseDTO> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
         var bairro = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Bairro não encontrado"));
 
@@ -61,9 +71,17 @@ public class NeighborhoodController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar bairro", description = "Atualiza os dados de um bairro existente")
+    @Operation(summary = "Atualizar bairro", description = "Atualiza os dados de um bairro existente (Apenas ADMIN)")
     @CacheEvict(value = "bairros", allEntries = true)
-    public ResponseEntity<NeighborhoodResponseDTO> atualizar(@PathVariable Long id, @RequestBody @Valid NeighborhoodRequestDTO dto) {
+    public ResponseEntity<?> atualizar(
+            @PathVariable Long id,
+            @RequestBody @Valid NeighborhoodRequestDTO dto,
+            @AuthenticationPrincipal User userAuth) {
+
+        if (!userAuth.getRole().equals(RoleType.ADMIN)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado: Somente administradores podem atualizar bairros");
+        }
+
         var bairro = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Bairro não encontrado"));
 
@@ -73,20 +91,25 @@ public class NeighborhoodController {
         bairro.setNome(dto.getNome());
         bairro.setCidade(cidade);
 
-        repository.save(bairro);
-
-        return ResponseEntity.ok(toResponseDTO(bairro));
+        Neighborhood updatedBairro = repository.save(bairro);
+        return ResponseEntity.ok(toResponseDTO(updatedBairro));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deletar bairro", description = "Remove um bairro do sistema")
+    @Operation(summary = "Deletar bairro", description = "Remove um bairro do sistema (Apenas ADMIN)")
     @CacheEvict(value = "bairros", allEntries = true)
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    public ResponseEntity<?> deletar(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User userAuth) {
+
+        if (!userAuth.getRole().equals(RoleType.ADMIN)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado: Somente administradores podem remover bairros");
+        }
+
         var bairro = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Bairro não encontrado"));
 
         repository.delete(bairro);
-
         return ResponseEntity.noContent().build();
     }
 

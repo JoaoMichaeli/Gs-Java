@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "TBL_DENUNCIAS")
@@ -39,4 +39,7 @@ public class Complaint {
     @ManyToOne
     @JoinColumn(name = "id_orgao", nullable = false)
     private PublicOrganization orgao;
+
+    @OneToMany(mappedBy = "id_denuncia", cascade = CascadeType.ALL)
+    private List<ReportFollowup> acompanhamentos;
 }
