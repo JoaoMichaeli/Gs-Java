@@ -10,6 +10,7 @@ import com.gs.EcoDenuncia.repository.ComplaintRepository;
 import com.gs.EcoDenuncia.repository.ReportFollowupRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/followup")
+@RequiredArgsConstructor
 @Slf4j
 public class ReportFollowupController {
 
@@ -86,7 +88,7 @@ public class ReportFollowupController {
 
     @PostMapping
     @Operation(summary = "Criar acompanhamento",
-            description = "Cria um novo acompanhamento de denúncia (Apenas ADMIN)")
+            description = "Cria um novo acompanhamento de denúncia (Apenas ADMIN), Status ('Aberto', 'Em Andamento', 'Concluido')")
     @CacheEvict(value = "acompanhamentos", allEntries = true)
     public ResponseEntity<?> createAcompanhamento(
             @RequestBody @Valid ReportFollowupRequestDTO dto,

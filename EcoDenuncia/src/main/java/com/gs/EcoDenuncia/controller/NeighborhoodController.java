@@ -10,6 +10,7 @@ import com.gs.EcoDenuncia.repository.NeighborhoodRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -23,13 +24,14 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/neighborhood")
 @RequiredArgsConstructor
+@Slf4j
 public class NeighborhoodController {
 
     @Autowired
-    private final NeighborhoodRepository repository;
+    private NeighborhoodRepository repository;
 
     @Autowired
-    private final CityRepository cityRepository;
+    private CityRepository cityRepository;
 
     @PostMapping
     @Operation(summary = "Criar bairro", description = "Cadastra um novo bairro no sistema (Apenas ADMIN)")

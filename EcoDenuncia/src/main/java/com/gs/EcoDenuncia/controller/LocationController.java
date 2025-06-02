@@ -10,6 +10,7 @@ import com.gs.EcoDenuncia.repository.NeighborhoodRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -23,13 +24,15 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/location")
 @RequiredArgsConstructor
+@Slf4j
+
 public class LocationController {
 
     @Autowired
-    private final LocationRepository repository;
+    private LocationRepository repository;
 
     @Autowired
-    private final NeighborhoodRepository neighborhoodRepository;
+    private NeighborhoodRepository neighborhoodRepository;
 
     @PostMapping
     @Operation(summary = "Criar localização", description = "Cadastra uma nova localização no sistema (Apenas ADMIN)")

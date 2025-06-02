@@ -9,6 +9,7 @@ import com.gs.EcoDenuncia.repository.StateRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -22,10 +23,11 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/state")
 @RequiredArgsConstructor
+@Slf4j
 public class StateController {
 
     @Autowired
-    private final StateRepository repository;
+    private StateRepository repository;
 
     @PostMapping
     @Operation(summary = "Criar estado", description = "Cadastra um novo estado no sistema (Apenas ADMIN)")

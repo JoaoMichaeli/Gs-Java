@@ -10,6 +10,7 @@ import com.gs.EcoDenuncia.repository.StateRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -24,13 +25,14 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/city")
 @RequiredArgsConstructor
+@Slf4j
 public class CityController {
 
     @Autowired
-    private final CityRepository repository;
+    private CityRepository repository;
 
     @Autowired
-    private final StateRepository stateRepository;
+    private StateRepository stateRepository;
 
     @PostMapping
     @Operation(summary = "Criar cidade", description = "Cadastra uma nova cidade no sistema (Apenas ADMIN)")

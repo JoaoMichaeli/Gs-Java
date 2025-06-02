@@ -16,7 +16,8 @@ import java.util.Date;
 @Builder
 public class ReportFollowup {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seqAcompanhamento")
+    @SequenceGenerator(name = "seqAcompanhamento", sequenceName = "SEQ_ACOMPANHAMENTO", allocationSize = 1)
     @Column(name = "id_acompanhamento")
     private Long id;
 

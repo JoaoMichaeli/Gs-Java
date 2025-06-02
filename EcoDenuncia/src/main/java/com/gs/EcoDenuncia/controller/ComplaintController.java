@@ -31,16 +31,16 @@ import java.util.stream.Collectors;
 public class ComplaintController {
 
     @Autowired
-    private final ComplaintRepository complaintRepository;
+    private ComplaintRepository complaintRepository;
 
     @Autowired
-    private final UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    private final LocationRepository locationRepository;
+    private LocationRepository locationRepository;
 
     @Autowired
-    private final PublicOrganizationRepository publicOrganizationRepository;
+    private PublicOrganizationRepository publicOrganizationRepository;
 
     @PostMapping
     @Operation(summary = "Criar denúncia", description = "Cadastra uma nova denúncia no sistema")
