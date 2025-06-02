@@ -1,6 +1,5 @@
 package com.gs.EcoDenuncia.dto.State;
 
-import com.gs.EcoDenuncia.model.StateType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -13,9 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class StateRequestDTO {
-    @NotBlank
+    @NotBlank(message = "Campo obrigatório")
     private String nome;
 
     @NotNull(message = "Campo obrigatório")
-    private StateType type;
+    private String uf;
 }

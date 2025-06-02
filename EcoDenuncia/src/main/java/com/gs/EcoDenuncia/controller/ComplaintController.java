@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -29,9 +30,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ComplaintController {
 
+    @Autowired
     private final ComplaintRepository complaintRepository;
+
+    @Autowired
     private final UserRepository userRepository;
+
+    @Autowired
     private final LocationRepository locationRepository;
+
+    @Autowired
     private final PublicOrganizationRepository publicOrganizationRepository;
 
     @PostMapping

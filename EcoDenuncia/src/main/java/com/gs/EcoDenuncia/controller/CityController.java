@@ -10,6 +10,7 @@ import com.gs.EcoDenuncia.repository.StateRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CityController {
 
+    @Autowired
     private final CityRepository repository;
+
+    @Autowired
     private final StateRepository stateRepository;
 
     @PostMapping

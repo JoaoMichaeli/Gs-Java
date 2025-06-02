@@ -6,6 +6,7 @@ import com.gs.EcoDenuncia.model.RoleType;
 import com.gs.EcoDenuncia.model.Token;
 import com.gs.EcoDenuncia.model.User;
 import org.springframework.stereotype.Service;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -13,10 +14,15 @@ import java.time.ZoneOffset;
 @Service
 public class TokenService {
 
-    private Instant expiresAt = LocalDateTime.now().plusDays(1).toInstant(ZoneOffset.ofHours(-3));
-    private Algorithm algorithm = Algorithm.HMAC256("secret");
+    private final Algorithm algorithm = Algorithm.HMAC256("secret");
 
-    public Token createToken(User user){
+    private Instant generateExpirationDate() {
+        return LocalDateTime.now().plusDays(1).toInstant(ZoneOffset.of("-03:00"));
+    }
+
+    public Token createToken(User user) {
+        Instant expiresAt = LocalDateTime.now().plusDays(1).toInstant(ZoneOffset.ofHours(-3));
+
         var jwt = JWT.create()
                 .withSubject(user.getId().toString())
                 .withClaim("email", user.getEmail())
@@ -27,13 +33,14 @@ public class TokenService {
         return new Token(jwt, user.getEmail());
     }
 
-    public User getUserFromToken(String token){
+
+    public User getUserFromToken(String token) {
         var verifiedToken = JWT.require(algorithm).build().verify(token);
 
         return User.builder()
                 .id(Long.valueOf(verifiedToken.getSubject()))
                 .email(verifiedToken.getClaim("email").asString())
-                .role(RoleType.valueOf(verifiedToken.getClaim("role").asString())) // converte para RoleType
+                .role(RoleType.valueOf(verifiedToken.getClaim("role").asString()))
                 .build();
     }
 }

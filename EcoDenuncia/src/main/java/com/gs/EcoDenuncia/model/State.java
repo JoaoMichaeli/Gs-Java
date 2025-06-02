@@ -2,7 +2,6 @@ package com.gs.EcoDenuncia.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -23,8 +22,6 @@ public class State {
     @NotBlank(message = "Campo obrigatório")
     private String nome;
 
-    @NotNull(message = "Campo obrigatório")
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 2)
-    private StateType type;
+    @NotBlank(message = "Campo obrigatório")
+    private String uf;
 }

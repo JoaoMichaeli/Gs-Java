@@ -33,6 +33,28 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
                         .requestMatchers("/users/**").authenticated()
+
+                        .requestMatchers(HttpMethod.GET, "/city/**").permitAll()
+                        .requestMatchers("/city/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/complaints/user/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/complaints/**").hasRole("ADMIN")
+                        .requestMatchers("/complaints/**").authenticated()
+
+                        .requestMatchers(HttpMethod.GET, "/location/**").permitAll()
+                        .requestMatchers("/location/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/neighborhood/**").permitAll()
+                        .requestMatchers("/neighborhood/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/followup/denuncia/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/followup/**").hasRole("ADMIN")
+                        .requestMatchers("/followup/**").authenticated()
+
+                        .requestMatchers(HttpMethod.GET, "/state/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/state/**").permitAll()
+                        .requestMatchers("/state/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)

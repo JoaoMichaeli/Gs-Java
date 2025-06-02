@@ -9,6 +9,7 @@ import com.gs.EcoDenuncia.repository.StateRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StateController {
 
+    @Autowired
     private final StateRepository repository;
 
     @PostMapping
@@ -37,7 +39,8 @@ public class StateController {
         }
 
         var estado = State.builder()
-                .type(dto.getType())
+                .nome(dto.getNome())
+                .uf(dto.getUf())
                 .build();
 
         State savedState = repository.save(estado);
@@ -78,7 +81,8 @@ public class StateController {
         var estado = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Estado não encontrado"));
 
-        estado.setType(dto.getType());
+        estado.setNome(dto.getNome());
+        estado.setUf(dto.getUf());
 
         State updatedState = repository.save(estado);
         return ResponseEntity.ok(toResponseDTO(updatedState));
@@ -105,7 +109,8 @@ public class StateController {
     private StateResponseDTO toResponseDTO(State estado) {
         return StateResponseDTO.builder()
                 .id(estado.getId())
-                .type(estado.getType())
+                .nome(estado.getNome())
+                .uf(estado.getUf())
                 .build();
     }
 }
