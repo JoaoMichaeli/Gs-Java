@@ -3,6 +3,7 @@ package com.gs.EcoDenuncia.dto.User;
 import com.gs.EcoDenuncia.model.RoleType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -20,6 +21,6 @@ public class UserRequestDTO {
     @NotBlank(message = "Senha é obrigatória")
     private String senha;
 
-    @NotBlank(message = "Role é obrigatória (USER ou ADMIN)")
+    @NotNull(message = "Role é obrigatória (USER ou ADMIN)")
     private RoleType role;
 }

@@ -25,8 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -113,7 +112,7 @@ public class ComplaintController {
         var filters = new ComplaintFilters(descricao, orgaoNome, localizacaoCidade);
         var specification = ComplaintSpecification.withFilters(filters);
 
-        Page<Complaint> complaintsPage = complaintRepository.findAll(specification, (org.springframework.data.domain.Pageable) pageable);
+        Page<Complaint> complaintsPage = complaintRepository.findAll(specification, pageable);
         Page<ComplaintResponseDTO> dtoPage = complaintsPage.map(this::toResponseDTO);
 
         return ResponseEntity.ok(dtoPage);
