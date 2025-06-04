@@ -23,6 +23,6 @@ public class PublicOrganization {
     private String nome;
 
     @NotBlank(message = "Campo obrigatório")
-    @Column(length = 8)
+    @Column(length = 20)
     private String areaAtuacao;
 }

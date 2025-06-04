@@ -21,10 +21,11 @@ public class ReportFollowup {
     @Column(name = "id_acompanhamento")
     private Long id;
 
+    @NotNull(message = "Campo obrigatório")
     @Column(nullable = false)
     private String status;
 
-    @NotNull
+    @NotNull(message = "Campo obrigatório")
     @Column(name = "data_atualizacao", nullable = false)
     private Date dataAtualizacao;
 
