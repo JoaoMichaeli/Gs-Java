@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,8 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/location")
@@ -72,7 +69,7 @@ public class LocationController {
 
     @GetMapping
     @Operation(summary = "Listar localizações", description = "Retorna uma lista com todas as localizações cadastradas")
-    @Cacheable("location")
+    @CacheEvict("location")
     public Page<LocationResponseDTO> listar(
             @RequestParam(required = false) String logradouro,
             @RequestParam(required = false) String cep,

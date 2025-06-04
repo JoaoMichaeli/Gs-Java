@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,8 +22,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/organizations")
@@ -61,7 +58,7 @@ public class PublicOrganizationController {
 
     @GetMapping
     @Operation(summary = "Listar órgãos públicos", description = "Retorna todos os órgãos públicos cadastrados")
-    @Cacheable("organizations")
+    @CacheEvict("organizations")
     public Page<PublicOrganizationResponseDTO> listar(
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String areaAtuacao,

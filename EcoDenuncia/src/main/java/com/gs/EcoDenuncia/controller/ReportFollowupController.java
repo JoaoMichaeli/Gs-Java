@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -123,7 +122,7 @@ public class ReportFollowupController {
     @GetMapping
     @Operation(summary = "Listar todos os acompanhamentos",
             description = "Lista todos os acompanhamentos do sistema (Apenas ADMIN)")
-    @Cacheable("followup")
+    @CacheEvict("followup")
     public ResponseEntity<?> listAll(
             @AuthenticationPrincipal User userAuth,
             @RequestParam(required = false) String status,

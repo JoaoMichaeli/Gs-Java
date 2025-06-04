@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -97,7 +96,7 @@ public class ComplaintController {
 
     @GetMapping
     @Operation(summary = "Listar denúncias", description = "Retorna uma lista paginada de denúncias (somente ADMIN)")
-    @Cacheable("complaints")
+    @CacheEvict("complaints")
     public ResponseEntity<Page<ComplaintResponseDTO>> index(
             @AuthenticationPrincipal User userAuth,
             @RequestParam(required = false) String descricao,

@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -59,7 +58,7 @@ public class UserController {
 
     @GetMapping
     @Operation(summary = "Listar usuários cadastrados", description = "Retorna todos os usuários cadastrados (Apenas ADMIN)")
-    @Cacheable("users")
+    @CacheEvict("users")
     public ResponseEntity<?> listarUsuarios(
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String email,
