@@ -1,1 +1,1 @@
-java -jar target/EcoDenuncia.jar --spring.profiles.active=prod
+java -jar target/EcoDenuncia.jar
