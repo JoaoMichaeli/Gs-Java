@@ -19,9 +19,6 @@ A solução promove a conscientização, fortalece a comunicação entre a popul
 
 ## 🚀 Funcionalidades
 - 🗑️ **Cadastro de denúncias com:**
-  - Descrição detalhada
-  - Localização via CEP (preenchimento automático com ViaCEP)
-  - Envio de fotos (feature futura)
 
 - 🔍 Consulta e acompanhamento de denúncias (status: Pendente, Em andamento, Resolvido)
 
@@ -47,11 +44,9 @@ A solução promove a conscientização, fortalece a comunicação entre a popul
 ## 🧠 Tecnologias Utilizadas
 - Backend: Java 17 + Spring Boot  
 - Segurança: Spring Security + JWT  
-- Banco de Dados: Oracle Database (ou PostgreSQL)  
+- Banco de Dados: Oracle Database
 - ORM: JPA + Hibernate  
-- API Externa: ViaCEP (consulta de CEP)  
-- Documentação: Swagger/OpenAPI  
-- Frontend (Opcional): React, Angular ou Thymeleaf  
+- Documentação: Swagger/OpenAPI
 
 ---
 
@@ -63,9 +58,9 @@ A solução promove a conscientização, fortalece a comunicação entre a popul
 | Cidade            | `/city`              | Cadastro e consulta de cidades      |
 | Bairro            | `/neighborhood`      | Cadastro e consulta de bairros      |
 | Localização       | `/location`          | Cadastro de endereços                |
-| Órgão Público     | `/public-organization` | Cadastro de órgãos responsáveis     |
+| Órgão Público     | `/organization` | Cadastro de órgãos responsáveis     |
 | Denúncia          | `/complaint`         | Criar, consultar e atualizar denúncias |
-| Acompanhamento denúncia | `/report-followup`   | Atualização de status das denúncias |
+| Acompanhamento denúncia | `/followup`   | Atualização de status das denúncias |
 | Usuário           | `/users`             | Cadastro e gestão de usuários        |
 | Autenticação      | `/login`             | Login e geração de token JWT         |
 
@@ -84,7 +79,7 @@ Authorization: Bearer {seu_token}
 
 ## 🏗️ Fluxo de Uso
 1. 👤 O cidadão realiza seu cadastro.  
-2. 🗺️ Informa o local da denúncia via CEP (autocompleta o endereço).  
+2. 🗺️ Informa o local da denúncia.  
 3. 🗑️ Descreve o problema e cria a denúncia.  
 4. 🏛️ O órgão público responsável recebe, avalia e atualiza o status.  
 5. ✅ O cidadão pode acompanhar o andamento até a resolução.  
